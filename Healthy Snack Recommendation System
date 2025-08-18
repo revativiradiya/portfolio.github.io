@@ -1,0 +1,122 @@
+import pandas as pd
+import numpy as np
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics.pairwise import cosine_similarity
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+from sklearn.preprocessing import StandardScaler
+
+# Load user-food interaction data (assuming you have User_ID, Food_ID, and Rating columns)
+# interaction_data = pd.read_csv('user_food_interaction.csv') # This line is no longer needed
+
+# Use the user_data DataFrame already loaded
+interaction_data = user_data
+
+print(interaction_data.head())
+
+# Load food dataset with nutrition information
+# food_data = pd.read_csv('handmade_food_dataset.csv') # This line is no longer needed
+
+# Use the food_data DataFrame already loaded
+
+# Handling missing values in the food dataset
+food_data = food_data.dropna(subset=['Food Item', 'Calories (kcal)', 'Protein (g)', 'Carbohydrates (g)', 'Fat (g)', 'Fiber (g)'])
+
+# Choose 3 nutrition attributes from the available list
+print("Choose 3 nutrition attributes from the following options:")
+nutrition_attributes = ['Calories (kcal)', 'Protein (g)', 'Carbohydrates (g)', 'Fat (g)', 'Fiber (g)']
+chosen_attributes = []
+temp_nutrition_attributes = nutrition_attributes[:] # Create a copy to modify
+for i in range(3):
+    attribute = input(f"Enter nutrition attribute {i + 1} (choose from {', '.join(temp_nutrition_attributes)}): ").strip()
+    if attribute in temp_nutrition_attributes:
+        chosen_attributes.append(attribute)
+        temp_nutrition_attributes.remove(attribute)
+    else:
+        print("Invalid attribute. Please choose from the available options.")
+        i -= 1  # Repeat the current iteration
+
+# Create a list to store the user's input food items
+user_food_items = []
+
+# Collect three food items from the user
+for i in range(3):
+    user_input = input(f"Enter food item {i + 1}: ").strip().lower()
+    user_food_items.append(user_input)
+
+# Initialize an empty DataFrame to store the combined nutritional information
+combined_nutrition = pd.DataFrame(columns=['Food Item'] + chosen_attributes)
+
+# Loop through the user's selected food items and calculate their nutritional information
+for food_item in user_food_items:
+    # Use fuzzy matching to find the best matching food item
+    matching_threshold = 90  # You can adjust this threshold
+    matches = process.extractBests(food_item, food_data['Food Item'].astype(str), scorer=fuzz.partial_ratio, score_cutoff=matching_threshold)
+
+
+    if matches:
+        # Select the best match
+        best_match = max(matches, key=lambda x: x[1])
+        matched_food_name = best_match[0]
+        print(f"Using matched food item: {matched_food_name}")
+
+        # Find the index of the matched food item in the dataset
+        target_food_index = food_data[food_data['Food Item'] == matched_food_name].index[0]
+
+        # Get the nutrition attributes for the matched food item
+        nutrition_values = food_data.loc[target_food_index, ['Food Item'] + chosen_attributes]
+
+        # Add the nutrition values to the combined nutrition DataFrame using pd.concat
+        combined_nutrition = pd.concat([combined_nutrition, nutrition_values.to_frame().T], ignore_index=True)
+    else:
+        print(f"No matching food item found for: {food_item}. Skipping.")
+
+# Display the food items and their chosen nutrition details
+print("\nFood Items and Chosen Nutrition Details:")
+display(combined_nutrition)
+
+# Extract nutrition attributes for matrix factorization
+# This list is already defined as chosen_attributes, so we can use that directly
+# nutrition_attributes = ['Calories (kcal)', 'Protein (g)', 'Carbohydrates (g)', 'Fat (g)', 'Fiber (g)']
+
+# Create a subset of the food dataset with only the selected nutrition attributes
+nutritional_data = food_data[chosen_attributes].values
+
+# Standardize the nutritional data (mean=0, std=1)
+scaler = StandardScaler()
+nutritional_data_scaled = scaler.fit_transform(nutritional_data)
+
+# Perform Truncated SVD on the standardized nutritional data
+num_components = 3  # You can adjust the number of components
+svd = TruncatedSVD(n_components=num_components)
+nutritional_data_svd = svd.fit_transform(nutritional_data_scaled)
+
+# Calculate cosine similarity between the mean nutritional values and all other foods based on SVD components
+# Ensure the mean is calculated only on numerical data
+mean_nutrition = combined_nutrition[chosen_attributes].apply(pd.to_numeric, errors='coerce').mean().values
+
+cosine_sim = cosine_similarity([mean_nutrition], nutritional_data_svd)
+
+# Create a DataFrame to store the cosine similarities
+similarity_df = pd.DataFrame(cosine_sim[0], columns=['Similarity'])
+
+# Add the food items to the similarity DataFrame
+similarity_df['Food Item'] = food_data['Food Item']
+
+# Sort the DataFrame by similarity in descending order
+similarity_df = similarity_df.sort_values(by='Similarity', ascending=False)
+
+# Display the top similar foods
+top_similar_foods = similarity_df.head(3)  # You can adjust the number of similar foods to display
+print("\nTop similar foods to the mean of selected items based on nutrition attributes (SVD):")
+display(top_similar_foods[['Food Item', 'Similarity']])
+
+# Get the nutrition values of the recommended foods
+recommended_foods = top_similar_foods['Food Item']
+
+# Create a DataFrame to store the nutrition values of recommended foods
+recommended_nutrition = food_data[food_data['Food Item'].isin(recommended_foods)][['Food Item'] + chosen_attributes]
+
+# Display the nutrition values of recommended foods
+print("\nNutrition Values of Recommended Foods:")
+display(recommended_nutrition)
