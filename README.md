@@ -9,21 +9,21 @@ This repository showcases my featured projects, each with a Jupyter Notebook for
 
 ## 🌟 Featured Projects  
 
-### 🥗 [Healthy Snack Recommendation System](projects//README.md)  
+### 🥗 [Healthy Snack Recommendation System](projects/Healthy_Snack_Recommendation_System/README.md)  
 A machine learning system that suggests healthy snacks using collaborative filtering.  
 - Built user-item similarity models to recommend personalized snacks.  
 - Showcased how data-driven systems can support healthier lifestyle choices.  
 
 ---
 
-### 🎓 [International Education Cost Analysis](projects/education-cost/README.md)  
+### 🎓 [International Education Cost Analysis](projects/Education-Cost-Analysis/README.md)  
 An in-depth analysis of the costs of studying abroad using Python and dashboards.  
 - Explored tuition fees, living expenses, and total costs across countries.  
 - Delivered insights through both **statistical models** and an **interactive dashboard**.  
 
 ---
 
-### 📉 [Customer Churn Prediction](projects/customer-churn/README.md)  
+### 📉 [Customer Churn Prediction](projects/Customer-Churn-Prediction/README.md)  
 A classification project predicting which customers are most likely to leave a service.  
 - Compared Logistic Regression and Random Forest models.  
 - Identified contract type, tenure, and monthly charges as key churn drivers.  
