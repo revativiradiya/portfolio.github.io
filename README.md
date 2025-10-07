@@ -42,7 +42,6 @@ A classification project predicting which customers are most likely to leave a s
 
 ## 📬 Let’s Connect  
 I’m open to opportunities in **Data Analytics, Business Intelligence, and Machine Learning**.  
-- 🌐 [LinkedIn](https://www.linkedin.com/in/revati-viradiya)  
 - 📧 Email: reviradiyajob@gmail.com
 
 ---
